@@ -1,0 +1,236 @@
+@model AdminProject.Models.User.UserEditViewModel
+
+@{
+    ViewData["Title"] = "Kullanıcı Düzenle";
+}
+
+<form method="post" action="/user/edit" id="userForm">
+    @Html.HiddenFor(p=>p.UserId)
+    @Html.HiddenFor(p=>p.UserName)
+    @Html.HiddenFor(p=>p.Email)
+    <!-- Tabs Navigation -->
+    <ul class="nav nav-tabs mb-3" id="formTabs">
+        <li class="nav-item">
+            <a class="nav-link active" data-bs-toggle="tab" href="#userInfo">Kullanıcı Bilgileri</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" data-bs-toggle="tab" href="#roles">Roller</a>
+        </li>
+    </ul>
+
+    <!-- Tab Content -->
+    <div class="tab-content">
+        <!-- User Information Tab -->
+        <div class="tab-pane fade show active" id="userInfo">
+            <div class="form-group row mb-3">
+                <label class="col-sm-3 col-form-label fw-bold">Kullanıcı Adı</label>
+                <div class="col-sm-9">
+                    <input type="text" class="form-control" name="userName" disabled="disabled" value="@Model.UserName">
+                    <span class="text-danger">@Html.ValidationMessageFor(m => m.UserName)</span>
+                </div>
+            </div>
+
+            <div class="form-group row mb-3">
+                <label class="col-sm-3 col-form-label fw-bold">Email</label>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <input type="email" class="form-control" name="email" disabled="disabled" id="email" value="@Model.Email">
+                        <div class="input-group-prepend">
+                            <span class="input-group-text">@@</span>
+                        </div>
+                    </div>
+                    <span class="text-danger">@Html.ValidationMessageFor(m => m.Email)</span>
+                </div>
+            </div>
+            
+            <fieldset>
+                <legend>
+                    <input type="checkbox" id="showPasswordFields"/>
+                    Şifre Düzenle
+                </legend>
+
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label fw-bold">Şifre</label>
+                    <div class="col-sm-9">
+                        <input type="password" class="form-control" disabled="disabled" name="password" id="password" value="@Model.Password">
+                        <small class="text-danger d-none" id="passwordLengthError">Şifre en az 6 karakter olmalıdır!</small>
+                        <span class="text-danger">@Html.ValidationMessageFor(m => m.Password)</span>
+                    </div>
+                </div>
+
+                <div class="form-group row mb-3">
+                    <label class="col-sm-3 col-form-label fw-bold">Şifre Doğrula</label>
+                    <div class="col-sm-9">
+                        <input type="password" class="form-control" disabled="disabled" name="passwordCheck" id="passwordCheck" value="@Model.Password">
+                        <span class="text-danger">@Html.ValidationMessageFor(m => m.PasswordCheck)</span>
+                    </div>
+                </div>
+            </fieldset>
+
+        </div>
+
+        <!-- Roles Tab -->
+        <div class="tab-pane fade" id="roles">
+            <div class="form-group">
+                <label class="fw-bold mb-2">Kullanıcı Rolleri</label>
+                <div id="rolesContainer">
+                </div>
+            </div>
+        </div>
+    </div>
+    <span class="text-danger" id="roleError">@Html.ValidationMessageFor(m => m.Roles)</span>
+
+    @if (ViewData.ModelState.ContainsKey("PasswordValidation"))
+    {
+        foreach (var identityValidation in @ViewData.ModelState["PasswordValidation"].Errors)
+        {
+            <div class="text-danger">@identityValidation.ErrorMessage</div>
+        }
+    }
+
+
+    <!-- Submit Button -->
+    <div class="d-flex justify-content-end mt-3">
+        <button type="submit" class="btn btn-primary">Düzenle</button>
+    </div>
+</form>
+
+@section FooterScript
+{
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+}
+
+<style>
+    fieldset {
+        padding: 5.6px 12px 10px;
+        margin: 0px 2px;
+        border: 2px solid;
+    }
+    
+    legend {
+        padding: 5px;
+        font-size: 20px;
+    }
+</style>
+
+<script>
+    var selectedRoles = @Html.Raw(Json.Serialize(Model.Roles));
+
+    function checkPasswords()
+    {
+        var password = $("#password").val();
+        var confirmPassword = $("#passwordCheck").val();
+        var passwordLengthError = $("#passwordLengthError");
+        var originPasswordInput = $("#password");
+        var confirmPasswordInput = $("#passwordCheck");
+
+        if (password.length < 6) {
+            passwordLengthError.removeClass("d-none");
+            $("#password").addClass("is-invalid").removeClass("is-valid");
+            
+            return false;
+        } else {
+            passwordLengthError.addClass("d-none");
+            $("#password").removeClass("is-invalid").addClass("is-valid");
+        }
+
+        if (password !== confirmPassword) {
+            originPasswordInput.addClass("is-invalid").removeClass("is-valid");
+            confirmPasswordInput.addClass("is-invalid").removeClass("is-valid");
+            
+            return false;
+        } else {
+            originPasswordInput.removeClass("is-invalid").addClass("is-valid");
+            confirmPasswordInput.removeClass("is-invalid").addClass("is-valid");
+            
+            return true;
+        }    
+    }
+
+    function loadRoles() {
+        $.ajax({
+            url: "/api/user/roles",  // Change this to your actual API endpoint
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                var container = $("#rolesContainer");
+                container.empty(); // Clear previous data
+
+                if (data.length === 0) {
+                    container.append("<p>No roles available.</p>");
+                } else {
+                    data.forEach(function (role) {
+                        var isChecked = selectedRoles.includes(role.name) ? "checked" : "";
+                        var checkboxHtml = `
+                            <div class="form-check">
+                                <input type="checkbox" class="form-check-input role-checkbox" name="roles" value="${role.name}" ${isChecked}>
+                                <label class="form-check-label">${role.name}</label>
+                            </div>`;
+                        container.append(checkboxHtml);
+                    });
+                }
+            },
+            error: function () {
+                $("#rolesContainer").html("<p class='text-danger'>Failed to load roles.</p>");
+            }
+        });
+    }
+
+
+    function validateEmail(email) {
+        var emailPattern = /^[a-zA-Z0-9._%+-]+@@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        return emailPattern.test(email);
+    }
+    
+    $(document).ready(function () {
+
+        loadRoles();
+        
+        $("#showPasswordFields").on("change", function () {
+            if ($("#showPasswordFields").is(":checked"))
+            {
+                $("#password").removeAttr("disabled");
+                $("#passwordCheck").removeAttr("disabled");
+            }
+            else {
+                $("#password").attr("disabled","disabled");
+                $("#passwordCheck").attr("disabled","disabled");
+            }
+        });
+        
+        $("#password, #passwordCheck").on("input", function () {
+            checkPasswords();
+        });
+
+        $("#email").on("input", function () {
+            var email = $(this).val();
+            var emailError = $("#emailError");
+
+            if (!validateEmail(email)) {
+                emailError.removeClass("d-none");
+                $(this).addClass("is-invalid").removeClass("is-valid");
+            } else {
+                emailError.addClass("d-none");
+                $(this).removeClass("is-invalid").addClass("is-valid");
+            }
+        });
+
+        $("#userForm").on("submit", function (e) {
+            debugger;
+            if ($("#showPasswordFields").is(":checked") && !checkPasswords()) {
+                e.preventDefault();
+            }
+            
+            if (!validateEmail($("#email").val())) {
+                e.preventDefault();
+            }
+
+            if ($(".role-checkbox:checked").length === 0) {
+                $("#roleError").text("You must select at least one role.");
+                e.preventDefault();
+            }
+        });
+    });
+
+
+</script>

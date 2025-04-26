@@ -1,0 +1,81 @@
+@{
+    ViewData["Title"] = "Kullanıcı Listesi";
+}
+
+@section HeaderScript
+{
+    <!-- jsGrid -->
+    <link rel="stylesheet" href="/plugins/jsgrid/jsgrid.min.css">
+    <link rel="stylesheet" href="/plugins/jsgrid/jsgrid-theme.min.css">
+}
+
+<div id="jsGrid">
+</div>
+
+@section FooterScript
+{
+    <!-- jsGrid -->
+    <script src="/plugins/jsgrid/jsgrid.min.js"></script>
+}
+
+<script>
+    $(function () {
+        $("#jsGrid").jsGrid({
+            height: "auto",
+            width: "100%",
+
+            heading: true,
+            sorting: true,
+            paging: true,
+            autoload: true,
+            insert:true,
+            
+            controller: {
+                loadData: function() {
+                    return $.ajax({
+                        url: "/api/user/list",
+                        dataType: "json"
+                    });
+                }
+            },
+
+            fields: [
+                { name: "userName", title:"Kullanıcı Adı", type: "text", width: 150 },
+                { name: "email", title:"Mail Adresi", type: "text", width: 150 },
+                {
+                    type: "control",
+                    modeSwitchButton: false,
+                    editButton: false, 
+                    deleteButton: false,
+                    itemTemplate: function(value, item) {
+                        var $result = jsGrid.fields.control.prototype.itemTemplate.apply(this, arguments);
+
+                        var $customEditButton = $("<button>").attr({class: "customGridEditbutton jsgrid-button jsgrid-edit-button"})
+                            .click(function(e) {
+                                location.href = "/user/edit/"+item.id;
+                                e.stopPropagation();
+                            });
+
+                        var $customDeleteButton = $("<button>").attr({class: "customGridDeletebutton jsgrid-button jsgrid-delete-button"})
+                            .click(function(e) {
+                                location.href = "/user/delete/"+item.id;
+                                e.stopPropagation();
+                            });
+
+                        return $("<div>").append($customEditButton).append($customDeleteButton);
+                    },
+                    headerTemplate: function() {
+                        return $("<i>").css("cursor","pointer").css("color","green").addClass("fa-solid fa-plus")
+                            .on("click", function () {
+                                location.href = "/user/add";
+                            });
+                    }
+                }
+            ],
+            onRefreshed: function() {
+                $("#jsGrid .jsgrid-table tr:odd td:nth-child(n)").css("background-color", "#e0e0e0");
+            }
+        });
+    });
+</script>
+

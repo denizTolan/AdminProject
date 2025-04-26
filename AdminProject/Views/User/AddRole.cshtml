@@ -1,0 +1,64 @@
+@model AdminProject.Models.User.RoleAddViewModel
+
+@{
+    ViewData["Title"] = "Rol Ekle";
+}
+
+<form method="post" action="/role/add" id="roleForm">
+
+    <div class="form-group row mb-3">
+        <label class="col-sm-3 col-form-label fw-bold">Rol Adı</label>
+        <div class="col-sm-9">
+            <input type="text" class="form-control" name="roleName" value="@Model.RoleName">
+            <span class="text-danger">@Html.ValidationMessageFor(m => m.RoleName)</span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="fw-bold mb-2">İzinler</label>
+        <div id="claimsContainer">
+        </div>
+        <span class="text-danger">@Html.ValidationMessageFor(m => m.Claims)</span>
+    </div>
+
+    <!-- Submit Button -->
+    <div class="d-flex justify-content-end mt-3">
+        <button type="submit" class="btn btn-primary">Ekle</button>
+    </div>
+</form>
+
+<script>
+    function loadRoles() {
+        $.ajax({
+            url: "/api/user/claims",  // Change this to your actual API endpoint
+            type: "GET",
+            dataType: "json",
+            success: function (data) {
+                var container = $("#claimsContainer");
+                container.empty(); // Clear previous data
+                
+                debugger;
+
+                if (data.length === 0) {
+                    container.append("<p>No roles available.</p>");
+                } else {
+                    data.forEach(function (role) {
+                        var checkboxHtml = `
+                            <div class="form-check d-inline-block me-4 mb-2" style="padding-left: 30px">
+                                <input type="checkbox" class="form-check-input role-checkbox" name="claims" value="${role}">
+                                <label class="form-check-label">${role}</label>
+                            </div>`;
+                        container.append(checkboxHtml);
+                    });
+                }
+            },
+            error: function () {
+                $("#rolesContainer").html("<p class='text-danger'>Failed to load roles.</p>");
+            }
+        });
+    }
+    
+    $(document).ready(function () {
+        loadRoles();
+    });
+</script>

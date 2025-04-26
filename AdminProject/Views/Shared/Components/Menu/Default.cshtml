@@ -1,0 +1,73 @@
+@model List<AdminProject.Models.Layout.MenuItemViewModel>
+
+<aside class="main-sidebar sidebar-dark-primary elevation-4">
+  <!-- Brand Logo -->
+  <a href="#" class="brand-link">
+    <span class="brand-text font-weight-light">Admin Panel</span>
+  </a>
+
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <!-- Sidebar user panel (optional) -->
+    <div class="user-panel mt-3 pb-3 mb-3 d-flex">
+      <div class="image">
+        <img src="/img/user.png" class="img-circle elevation-2" alt="User Image">
+      </div>
+      <div class="info">
+        <a href="#" class="d-block">@User?.Identity?.Name</a>
+      </div>
+    </div>
+      
+    <!-- Sidebar Menu -->
+    <nav class="mt-2">
+      <ul class="nav nav-pills nav-sidebar flex-column" data-widget="treeview" role="menu" data-accordion="false">
+        <!-- Add icons to the links using the .nav-icon class
+        with font-awesome or any other icon font library -->
+
+        @foreach (var menu in Model)
+        {
+          <li class="nav-item menu-open">
+            <a href="@menu.Url" class="nav-link active">
+              <i class="nav-icon @menu.Icon"></i>
+              <p>
+                @menu.Title
+                @if (menu.SubMenus.Any())
+                {
+                  <i class="right fas fa-angle-left"></i>
+                }
+              </p>
+            </a>
+            @if (menu.SubMenus.Any())
+            {
+              <ul class="nav nav-treeview">
+                @foreach (var subMenu in menu.SubMenus)
+                {
+                  <li class="nav-item">
+                    <a href="@subMenu.Url" class="nav-link">
+                      <i class="@subMenu.Icon nav-icon"></i>
+                      <p>@subMenu.Title</p>
+                    </a>
+                  </li>
+                }
+              </ul>
+            }
+          </li>
+        }
+
+      </ul>
+    </nav>
+    <!-- /.sidebar-menu -->
+  </div>
+  <!-- /.sidebar -->
+</aside>
+
+<script>
+    $(document).ready(function () {
+        var currentUrl = window.location.pathname.toLowerCase();
+        $(".nav-link").each(function () {
+            if ($(this).attr("href").toLowerCase() === currentUrl) {
+                $(this).addClass("active");
+            }
+        });
+    });
+</script>
